@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="bn"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tail It! — Tag Question Game</title>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+Da+2:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#1B1340;--card:#2A1F5E;--line:#4A3B91;--txt:#FFF8EC;--mute:#B9AEE6;--mango:#FFB020;--mint:#2DD4A7;--coral:#FF5C7A;--sky:#5CC8FF;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0}
+body{min-height:100%;background:radial-gradient(circle at 50% -10%,#3b2a85 0,var(--ink) 60%) fixed;background-color:var(--ink);color:var(--txt);font-family:"Baloo Da 2","Nirmala UI","Segoe UI",system-ui,sans-serif;font-size:18px}
+#app{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--sky);outline-offset:3px}
+h1{font-size:2.6rem;line-height:1;margin:.2em 0 .1em;font-weight:800}
+.sub{color:var(--mute);margin:0 0 18px}
+.bubble{background:var(--card);border:2px solid var(--line);border-radius:22px;padding:18px 18px 20px;font-size:1.45rem;font-weight:700;line-height:1.5}
+.slot{display:inline-block;min-width:5.5ch;padding:0 6px;border-bottom:3px dashed var(--mango);color:var(--mango);font-weight:800;transform-origin:left center}
+.slot.ok{border-bottom-style:solid;color:var(--mint);animation:wag .7s}
+.slot.no{color:var(--coral);animation:shake .4s}
+.hero .slot{animation:wag 1.6s infinite}
+@keyframes wag{0%,100%{transform:rotate(0)}25%{transform:rotate(-9deg)}50%{transform:rotate(8deg)}75%{transform:rotate(-5deg)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.lv{display:flex;align-items:center;justify-content:space-between;width:100%;margin:10px 0;padding:14px 18px;border-radius:18px;border:2px solid var(--c);background:var(--card);text-align:left}
+.lv:hover{background:var(--c);color:var(--ink)}
+.lv b{font-size:1.25rem}.lv small{display:block;opacity:.85}
+.rules{color:var(--mute);font-size:.95rem;margin-top:14px}
+.top{display:flex;justify-content:space-between;align-items:center;font-weight:800;margin-bottom:8px}
+.hearts{letter-spacing:3px}
+.streak{color:var(--mango)}
+.bar{height:10px;border-radius:9px;background:var(--card);overflow:hidden;margin-bottom:14px}
+.bar i{display:block;height:100%;width:100%;background:var(--mint);transition:width .1s linear,background .3s}
+.bar i.low{background:var(--coral)}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.opt{padding:16px 8px;border-radius:16px;border:2px solid var(--line);background:var(--card);font-weight:800;font-size:1.15rem}
+.opt:hover:not(:disabled){border-color:var(--sky);transform:translateY(-2px)}
+.opt.right{background:var(--mint);border-color:var(--mint);color:var(--ink)}
+.opt.wrong{background:var(--coral);border-color:var(--coral);color:var(--ink)}
+.opt:disabled{cursor:default}
+.fb{margin-top:16px;border-radius:18px;padding:14px 16px;background:var(--card);border-left:8px solid var(--mint)}
+.fb.bad{border-left-color:var(--coral)}
+.fb p{margin:.2em 0}
+.go{margin-top:10px;padding:10px 22px;border:0;border-radius:14px;background:var(--mango);color:var(--ink);font-weight:800}
+.stars{font-size:3rem;letter-spacing:6px;text-align:center}
+.big{font-size:3rem;font-weight:800;text-align:center;color:var(--mango);line-height:1}
+.miss{margin:8px 0;padding:8px 12px;border-radius:12px;background:var(--card);font-size:1rem}
+.miss b{color:var(--mint)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.row .go{flex:1}.row .alt{background:var(--card);color:var(--txt);border:2px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style></head><body><div id="app"></div>
+<script>
+const Q={
+1:[["She is a doctor","isn't she","is she|doesn't she|aren't she","Positive বাক্য → negative tag। is → isn't, She → she।"],
+["They are playing","aren't they","are they|don't they|isn't they","are → aren't, They → they।"],
+["He plays cricket","doesn't he","isn't he|don't he|does he","Auxiliary নেই, Present Simple, He → doesn't he।"],
+["You don't know him","do you","don't you|did you|are you","Negative বাক্য → positive tag: do you।"],
+["The boys went home","didn't they","don't they|weren't they|didn't he","Past Simple (went) → didn't; The boys → they।"],
+["It will rain","won't it","will it|wouldn't it|doesn't it","will → won't (willn't নয়)।"],
+["She can swim","can't she","can she|couldn't she|isn't she","Modal can → can't।"],
+["He isn't late","is he","isn't he|does he|was he","Negative বাক্য → positive tag: is he।"],
+["We were happy","weren't we","wasn't we|aren't we|were we","were → weren't, We → we।"],
+["The book is new","isn't it","isn't book|aren't it|is it","Noun নয়, pronoun: The book → it।"]],
+2:[["I am late","aren't I","amn't I|isn't I|am I","I am → aren't I।"],
+["Let's go out","shall we","will you|won't we|do we","Let's → shall we।"],
+["Open the door","will you","shall we|won't he|do you","Imperative (আদেশ) → will you।"],
+["Don't make noise","will you","shall we|do you|don't you","Negative imperative-ও → will you।"],
+["Everybody is ready","aren't they","isn't he|isn't it|are they","Everybody → they; is → aren't they।"],
+["There is a pen","isn't there","isn't it|is there|doesn't there","There is → isn't there।"],
+["This is your bag","isn't it","isn't this|aren't they|isn't he","This → it।"],
+["Nobody came","did they","didn't they|did he|came they","Nobody নিজেই negative → positive tag; Nobody → they।"],
+["He never lies","does he","doesn't he|is he|did he","never negative অর্থ দেয় → positive tag।"],
+["They have finished","haven't they","don't they|didn't they|have they","Perfect tense: have → haven't।"]],
+3:[["He hardly works","does he","doesn't he|is he|did he","hardly negative অর্থ → positive tag।"],
+["Few people came","did they","didn't they|do they|didn't he","Few = প্রায় কেউ না (negative) → did they।"],
+["He used to live here","didn't he","doesn't he|isn't he|hadn't he","used to → didn't।"],
+["You must obey your teacher","mustn't you","must you|don't you|can't you","বাধ্যবাধকতা must → mustn't।"],
+["He must be ill","isn't he","mustn't he|doesn't he|isn't it","অনুমান বোঝালে must-এর পরের verb (be) দেখো → isn't he।"],
+["She has to leave early","doesn't she","hasn't she|didn't she|isn't she","has to (বাধ্যবাধকতা) → does/doesn't।"],
+["Let me carry it","will you","shall we|shall I|won't I","Let me → will you।"],
+["I think he is honest","isn't he","don't I|aren't I|doesn't he","I think + clause: tag হয় পরের clause-এর জন্য।"],
+["You had better go","hadn't you","didn't you|wouldn't you|shouldn't you","had better → hadn't।"],
+["Nothing happened","did it","didn't it|did they|didn't they","Nothing negative, pronoun it → did it।"]]};
+const LV={1:{n:"সহজ",d:"Basic auxiliary ও pronoun",c:"#2DD4A7"},2:{n:"মাঝারি",d:"Let's, imperative, everybody, never",c:"#FFB020"},3:{n:"কঠিন",d:"hardly, must, used to, had better",c:"#FF5C7A"}};
+const $=s=>document.querySelector(s),app=$("#app");
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const best=l=>{try{return +localStorage.getItem("tail"+l)||0}catch(e){return 0}};
+const setBest=(l,v)=>{try{localStorage.setItem("tail"+l,v)}catch(e){}};
+let S,tm;
+function home(){clearInterval(tm);
+app.innerHTML=`<div class="hero"><h1>Tail It! 🐶</h1><p class="sub">Tag মানে লেজ — বাক্যের লেজ জুড়ে দাও, ঠিকঠাক!</p>
+<div class="bubble">She is clever<span class="slot">, isn't she?</span></div></div>
+<div style="margin-top:18px">${[1,2,3].map(l=>`<button class="lv" style="--c:${LV[l].c}" onclick="start(${l})"><span><b>Level ${l} — ${LV[l].n}</b><small>${LV[l].d}</small></span><span>🏆 ${best(l)}</span></button>`).join("")}</div>
+<p class="rules">❤️ ৩টি হার্ট • ⏱ প্রতি প্রশ্নে ১৫ সেকেন্ড • 🔥 পরপর ঠিক উত্তরে বাড়তি পয়েন্ট</p>`}
+function start(l){S={l,qs:shuf(Q[l]).map(q=>({s:q[0],a:q[1],o:shuf([q[1],...q[2].split("|")]),n:q[3]})),i:0,score:0,hearts:3,streak:0,ok:0,t:15,lock:false,miss:[]};play()}
+function play(){const q=S.qs[S.i];S.t=15;S.lock=false;
+app.innerHTML=`<div class="top"><span class="hearts" id="h"></span><span>প্রশ্ন ${S.i+1}/${S.qs.length}</span><span>⭐ <span id="sc">${S.score}</span></span></div>
+<div class="bar"><i id="b"></i></div><div class="streak top" id="st"></div>
+<div class="bubble">${q.s}<span class="slot" id="slot">, ______ ?</span></div>
+<div class="opts">${q.o.map((o,k)=>`<button class="opt" onclick="pick(${k})">${o}</button>`).join("")}</div><div id="fb"></div>`;
+hud();clearInterval(tm);tm=setInterval(()=>{S.t-=.1;const b=$("#b");b.style.width=Math.max(S.t,0)/15*100+"%";b.className=S.t<5?"low":"";if(S.t<=0)pick(-1)},100)}
+function hud(){$("#h").textContent="❤️".repeat(S.hearts)+"🖤".repeat(3-S.hearts);$("#st").textContent=S.streak>1?`🔥 পরপর ${S.streak}টি ঠিক!`:""}
+function pick(k){if(S.lock)return;S.lock=true;clearInterval(tm);const q=S.qs[S.i],ok=q.o[k]===q.a;let gain=0;
+const bs=document.querySelectorAll(".opt");bs.forEach((b,i)=>{b.disabled=true;if(q.o[i]===q.a)b.classList.add("right");else if(i===k)b.classList.add("wrong")});
+const sl=$("#slot");sl.textContent=", "+q.a+"?";sl.className="slot "+(ok?"ok":"no");
+if(ok){S.streak++;S.ok++;gain=10+Math.ceil(S.t)+(S.streak>1?S.streak*2:0);S.score+=gain}else{S.streak=0;S.hearts--;S.miss.push(q)}
+$("#sc").textContent=S.score;hud();
+const last=S.i+1>=S.qs.length||S.hearts<=0;
+$("#fb").innerHTML=`<div class="fb ${ok?"":"bad"}"><p><b>${ok?"দারুণ! +"+gain+" পয়েন্ট 🎉":(k<0?"সময় শেষ! ⏰":"ভুল হয়েছে 😅")+" সঠিক উত্তর: "+q.a}</b></p><p>${q.n}</p><button class="go" onclick="next()">${last?"ফলাফল দেখো":"পরের প্রশ্ন"}</button></div>`;
+$(".go").focus()}
+function next(){S.i++;if(S.i>=S.qs.length||S.hearts<=0)end();else play()}
+function end(){clearInterval(tm);const nb=S.score>best(S.l);if(nb)setBest(S.l,S.score);
+const st=S.ok>=9?3:S.ok>=6?2:S.ok>=3?1:0,msg=["আরেকবার চেষ্টা করো, পারবে!","ভালো শুরু! নোট দেখে আবার খেলো।","খুব ভালো! আর একটু হলেই পুরো নম্বর।","অসাধারণ! তুমি Tag Question মাস্টার! 🏅"][st];
+app.innerHTML=`<h1 style="text-align:center">Level ${S.l} শেষ</h1><div class="stars">${"⭐".repeat(st)}${"☆".repeat(3-st)}</div><div class="big">${S.score}</div>
+<p class="sub" style="text-align:center">${S.ok}/${S.qs.length} ঠিক • ${nb?"🎊 নতুন সেরা স্কোর!":"সেরা: "+best(S.l)}</p><p style="text-align:center">${msg}</p>
+${S.miss.length?`<h3>যেগুলো ভুল হয়েছে</h3>${S.miss.map(q=>`<div class="miss">${q.s}, <b>${q.a}?</b><br>${q.n}</div>`).join("")}`:""}
+<div class="row"><button class="go" onclick="start(${S.l})">আবার খেলো</button><button class="go alt" onclick="home()">লেভেল বদলাও</button></div>`}
+home();
+</script></body></html>
